@@ -2,9 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Text;
 
-class TextController extends Controller
+
+final class TextController
 {
-    //
+    public function __invoke()
+    {
+        return response()->json([
+            'text' => Text::get()
+        ]);
+    }
 }
