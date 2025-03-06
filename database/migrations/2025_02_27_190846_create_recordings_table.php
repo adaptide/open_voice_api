@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('recordings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('text_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('path');
             $table->string('status')->default('pending');
             $table->timestamps();
