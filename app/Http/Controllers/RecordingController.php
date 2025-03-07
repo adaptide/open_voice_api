@@ -14,7 +14,7 @@ final class RecordingController
             'text_id' => 'required|integer|exists:texts,id',
             'path' => 'required', // Max 10MB
         ]);
-        info($request->all());
+        dd($request->all());
         $text = Text::find($request->text_id);
 
         if (is_file($request->path)) {
