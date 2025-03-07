@@ -11,22 +11,19 @@ final class RecordingController
     public function __invoke(Request $request)
     {
         $request->validate([
-            'recordings' => 'required|array',
-            'recordings.*.text_id' => 'required|integer|exists:texts,id',
-            'recordings.*.path' => 'required', // Max 10MB
+            'text_id' => 'required|integer|exists:texts,id',
+            'path' => 'required', // Max 10MB
         ]);
 
-        foreach ($request->recordings as $recording) {
-            $text = Text::find($recording['text_id']);
+        $text = Text::find($request->text_id);
 
-            if (is_file($recording['path'])) {
-                $filePath = $recording['path']->store('recordings', 'public');
-            }
-
-            $text->recordings()->create([
-                'path' => $filePath,
-            ]);
+        if (is_file($request->path)) {
+            $filePath = $request->path->store('recordings', 'public');
         }
+
+        $text->recordings()->create([
+            'path' => $filePath,
+        ]);
 
         return response()->json(['message' => 'Recordings uploaded successfully'], Response::HTTP_CREATED);
     }
