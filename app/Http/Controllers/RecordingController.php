@@ -13,7 +13,7 @@ final class RecordingController
         $request->validate([
             'recordings' => 'required|array',
             'recordings.*.text_id' => 'required|integer|exists:texts,id',
-            'recordings.*.path' => 'required|file|mimes:mp3|max:10240', // Max 10MB
+            'recordings.*.path' => 'required|file|mimes:mp3,wav|max:10240', // Max 10MB
         ]);
 
         foreach ($request->recordings as $recording) {

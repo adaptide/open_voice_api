@@ -1,0 +1,12 @@
+[
+    {
+        "name": "OpenVoice",
+        "type": "postgres",
+        "host": "ep-autumn-smoke-a557glta.aws-us-east-2.pg.laravel.cloud",
+        "port": "5432",
+        "username": "laravel",
+        "password": "npg_col0XfBVGjZ7",
+        "database": "shmainap",
+        "sslmode": "require"
+    }
+]
