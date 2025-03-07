@@ -18,6 +18,9 @@ final class TextController
                     return $query->where('organization_id', $request->organization);
                 });
             },
+            function ($query) {
+                return $query->inRandomOrder();
+            }
         )->paginate($request->perPage ?? 10);
         return response()->json([
             'data' => TextResource::collection($texts),
