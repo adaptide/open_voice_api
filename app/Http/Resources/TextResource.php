@@ -17,8 +17,8 @@ class TextResource extends JsonResource
         return [
             'id' => $this->id,
             'content' => $this->content,
-            'project' => $this->project->name,
-            'category' => $this->category->name,
+            'project' => $this->project?->name,
+            'category' => $this->category?->name,
         ];
     }
 }

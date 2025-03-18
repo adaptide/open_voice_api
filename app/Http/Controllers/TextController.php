@@ -3,42 +3,53 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\TextResource;
+use App\Models\Recording;
 use App\Models\Text;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 final class TextController
 {
-    public function index(Request $request)
+    public function __invoke(Request $request)
     {
-        $texts = Text::with('project')->when(
-            $request->organization,
-            function ($query) use ($request) {
-                return $query->whereHas('project', function ($query) use ($request) {
-                    return $query->where('organization_id', $request->organization);
-                });
-            },
-            function ($query) {
-                return $query->inRandomOrder();
-            }
-        )->paginate($request->perPage ?? 10);
+        $user = Auth::guard('sanctum')->user();
+
+        $userId = $user?->id;
+        $uuid = $request->cookie('uuid');
+
+        $recordedTextIds = Recording::query()
+            ->when($userId, fn($query) => $query->orWhere('user_id', $userId))
+            ->when($uuid, fn($query) => $query->orWhere('uuid', $uuid))
+            ->pluck('text_id')
+            ->toArray();
+
+        $textsQuery = Text::with(['project', 'category'])
+            ->when(
+                $request->has('organization'),
+                function ($query) use ($request, $user) {
+                    if (!$user || !$user->organizations()->where('id', $request->organization)->exists()) {
+                        return $query->whereRaw('1 = 0');
+                    }
+                    return $query->whereHas('project', fn($q) => $q->where('organization_id', $request->organization));
+                },
+                function ($query) {
+                    $query->whereIsPublic(true);
+                }
+            )
+            ->whereNotIn('id', $recordedTextIds)
+            ->inRandomOrder()
+            ->limit($request->input('count', 1));
+
+        $texts = $textsQuery->get();
+        if ($texts->isEmpty()) {
+            return response()->json([
+                'message' => 'Нет доступных текстов для записи.',
+                'data' => [],
+            ], 404);
+        }
         return response()->json([
             'data' => TextResource::collection($texts),
-            'pagination' => [
-                'total' => $texts->total(),
-                'nextPageUrl' => $texts->nextPageUrl(),
-                'previousPageUrl' => $texts->previousPageUrl(),
-                'firstItem' => $texts->firstItem(),
-                'lastItem' => $texts->lastItem(),
-                'hasPages' => $texts->hasPages(),
-                'hasMorePages' => $texts->hasMorePages(),
-                'path' => $texts->path(),
-                'isEmpty' => $texts->isEmpty(),
-                'isNotEmpty' => $texts->isNotEmpty(),
-                'perPage' => $texts->perPage(),
-                'currentPage' => $texts->currentPage(),
-                'lastPage' => $texts->lastPage(),
-            ],
         ]);
     }
 }

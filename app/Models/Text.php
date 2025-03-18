@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin IdeHelperText
+ */
 class Text extends Model
 {
     use HasFactory;
@@ -24,6 +28,21 @@ class Text extends Model
     {
         return $this->hasMany(Recording::class);
     }
+    public function organization()
+    {
+        return $this->hasOneThrough(
+            Organization::class,
+            Project::class,
+            'id',
+            'id',
+            'project_id',
+            'organization_id'
+        );
+    }
+    // public function scopeGetText(Builder $query)
+    // {
 
+    //     $query->
+    // }
 
 }

@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class RecordingResource extends Resource
 {
+    protected static ?string $tenantOwnershipRelationshipName = 'organization';
     protected static ?string $model = Recording::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -27,8 +28,10 @@ class RecordingResource extends Resource
                     ->required()
                     ->numeric(),
                 Forms\Components\TextInput::make('user_id')
-                    ->required()
                     ->numeric(),
+                Forms\Components\TextInput::make('uuid')
+                    ->label('UUID')
+                    ->maxLength(255),
                 Forms\Components\TextInput::make('path')
                     ->required()
                     ->maxLength(255),
@@ -39,19 +42,25 @@ class RecordingResource extends Resource
             ]);
     }
 
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
+
                 Tables\Columns\TextColumn::make('text.content')
-                    ->wrap()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('path')
-                    ->formatStateUsing(fn(Recording $record) => asset('storage/' . $record->path))
-                    ->wrap()
-                    ->limit(50)
-                    ->url(fn(Recording $record) => asset('storage/' . $record->path))
-                    ->searchable(),
+                Tables\Columns\TextColumn::make('user.name')
+                    ->sortable(),
+                Tables\Columns\ViewColumn::make('path')
+                    ->label('preview')
+                    ->view('components.filament-audio-preview')
+                    ->toggleable()
+                    ->url(false),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->searchable(),
@@ -59,9 +68,7 @@ class RecordingResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
+            ->actions([])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
