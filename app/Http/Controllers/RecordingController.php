@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Recording;
+use App\Models\Review;
 use App\Models\Text;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -43,5 +45,36 @@ final class RecordingController
 
         return response()->json(['message' => 'Recordings uploaded successfully'], Response::HTTP_CREATED);
     }
-    public function index() {}
+    public function index()
+    {
+        $recordings = Recording::with('text')->get();
+
+        $recordings->map(function ($recording) {
+            $recording->full_path = Storage::disk('public')->url($recording->path);
+            return $recording;
+        });
+
+        return response()->json($recordings);
+    }
+
+    // app/Http/Controllers/RecordingController.php
+
+    public function review(Request $request)
+    {
+        $request->validate([
+            'recording_id' => 'required|integer|exists:recordings,id',
+            'rating' => 'required|integer|min:1|max:5',
+            'feedback' => 'nullable|string',
+        ]);
+
+        $review = Review::create([
+            'recording_id' => $request->recording_id,
+            'user_id' => Auth::id(),
+            'uuid' => $request->uuid ?? (string) \Str::uuid(),
+            'feedback' => $request->feedback,
+            'rating' => $request->rating,
+        ]);
+
+        return response()->json(['message' => 'Review submitted successfully', 'review' => $review], \Response::HTTP_CREATED);
+    }
 }
